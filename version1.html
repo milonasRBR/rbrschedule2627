@@ -1,0 +1,1080 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#720000">
+  <title>Red Bank Regional — Bell Schedule</title>
+
+  <style>
+    :root {
+      --red: #790d19;
+      --red-dark: #4e0710;
+      --red-light: #a8323e;
+      --red-soft: #f8e9e9;
+      --ink: #282326;
+      --muted: #786f72;
+      --line: #eee5e5;
+      --surface: #fff;
+      --background: #f8f5f3;
+      --warning: #fff2df;
+      --shadow: 0 12px 32px rgba(65, 24, 29, .08);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 88% 0%, rgba(121, 13, 25, .09), transparent 34rem),
+        var(--background);
+    }
+
+    button, input { font: inherit; }
+
+    header {
+      min-height: 82px;
+      padding: 14px max(20px, calc((100vw - 1180px) / 2));
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: #fff;
+      background: linear-gradient(115deg, var(--red-dark), var(--red));
+      box-shadow: 0 6px 22px rgba(78, 7, 16, .2);
+    }
+
+    .menu-button {
+      padding: 10px 14px;
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 12px;
+      color: #fff;
+      background: rgba(255,255,255,.1);
+      font-weight: 750;
+      cursor: pointer;
+      transition: background .18s, transform .18s;
+    }
+
+    .menu-button:hover {
+      background: rgba(255,255,255,.2);
+      transform: translateY(-1px);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.18rem;
+      letter-spacing: -.02em;
+    }
+
+    .brand p {
+      margin: 3px 0 0;
+      color: rgba(255,255,255,.75);
+      font-size: .86rem;
+    }
+
+    .clock {
+      margin-left: auto;
+      padding: 9px 13px;
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 12px;
+      background: rgba(255,255,255,.1);
+      font-variant-numeric: tabular-nums;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .sidebar {
+      position: fixed;
+      z-index: 20;
+      inset: 0 auto 0 0;
+      width: min(320px, 88vw);
+      padding: 25px;
+      background: var(--surface);
+      box-shadow: 12px 0 38px rgba(0,0,0,.18);
+      transform: translateX(-110%);
+      transition: transform .24s ease;
+    }
+
+    .sidebar.open { transform: translateX(0); }
+
+    .sidebar-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+    }
+
+    .sidebar h2 {
+      margin: 0;
+      color: var(--red-dark);
+      font-size: 1.15rem;
+    }
+
+    .close-button {
+      width: 39px;
+      height: 39px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--red-soft);
+      color: var(--red-dark);
+      font-size: 1.45rem;
+      cursor: pointer;
+    }
+
+    .day-option {
+      display: block;
+      width: 100%;
+      margin: 9px 0;
+      padding: 14px 15px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--red-dark);
+      background: #fff;
+      text-align: left;
+      font-weight: 800;
+      cursor: pointer;
+      transition: border-color .18s, background .18s, transform .18s;
+    }
+
+    .day-option:hover {
+      border-color: #d4a5a9;
+      background: #fffafa;
+      transform: translateX(2px);
+    }
+
+    .day-option[aria-pressed="true"] {
+      border-color: var(--red);
+      color: #fff;
+      background: var(--red);
+    }
+
+    .backdrop {
+      display: none;
+      position: fixed;
+      z-index: 19;
+      inset: 0;
+      background: rgba(26, 15, 17, .52);
+      backdrop-filter: blur(3px);
+    }
+
+    .backdrop.visible { display: block; }
+
+    main {
+      width: min(1180px, calc(100% - 40px));
+      margin: 34px auto 54px;
+    }
+
+    .page-intro {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .page-intro h2 {
+      margin: 0;
+      color: var(--red-dark);
+      font-size: clamp(1.5rem, 3vw, 1.9rem);
+      letter-spacing: -.04em;
+    }
+
+    .date-text {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: .95rem;
+    }
+
+    .day-badge {
+      padding: 9px 15px;
+      border: 1px solid #ead1d3;
+      border-radius: 999px;
+      color: var(--red-dark);
+      background: #fff;
+      font-size: .78rem;
+      font-weight: 850;
+      letter-spacing: .08em;
+      white-space: nowrap;
+    }
+
+    .date-controls {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-bottom: 20px;
+    }
+
+    .date-controls label {
+      margin-right: 4px;
+      color: var(--ink);
+      font-size: .9rem;
+      font-weight: 750;
+    }
+
+    .date-controls input {
+      min-height: 42px;
+      padding: 8px 11px;
+      border: 1px solid #e7dede;
+      border-radius: 11px;
+      color: var(--ink);
+      background: #fff;
+      outline: none;
+    }
+
+    .date-controls input:focus {
+      border-color: var(--red-light);
+      box-shadow: 0 0 0 3px rgba(121, 13, 25, .1);
+    }
+
+    .date-arrow, .today-button {
+      min-width: 42px;
+      min-height: 42px;
+      border: 1px solid #e7dede;
+      border-radius: 11px;
+      color: var(--red);
+      background: #fff;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background .18s, border-color .18s, transform .18s;
+    }
+
+    .date-arrow { font-size: 1.25rem; }
+    .today-button { padding: 8px 14px; }
+
+    .date-arrow:hover, .today-button:hover {
+      border-color: #d4a5a9;
+      background: var(--red-soft);
+      transform: translateY(-1px);
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: minmax(270px, .82fr) minmax(0, 1.45fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .card {
+      min-width: 0;
+      padding: 23px;
+      border: 1px solid rgba(90, 44, 49, .08);
+      border-radius: 18px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .card-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 0 18px;
+    }
+
+    .card-heading h2 {
+      margin: 0;
+      color: var(--red-dark);
+      font-size: .82rem;
+      font-weight: 850;
+      letter-spacing: .11em;
+    }
+
+    .card-heading span {
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 650;
+    }
+
+    .countdown-card {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+      border-color: #ead8d9;
+      background: linear-gradient(145deg, #fff 15%, #fff8f7);
+    }
+
+    .countdown-card::after {
+      content: "";
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      right: -70px;
+      bottom: -75px;
+      border-radius: 50%;
+      background: rgba(121, 13, 25, .055);
+      pointer-events: none;
+    }
+
+    .countdown-label {
+      color: var(--muted);
+      font-size: .72rem;
+      font-weight: 850;
+      letter-spacing: .14em;
+    }
+
+    .current-period {
+      margin: 10px 0 5px;
+      color: var(--red-dark);
+      font-size: clamp(1.8rem, 3.5vw, 2.45rem);
+      line-height: 1.08;
+      letter-spacing: -.05em;
+    }
+
+    .period-times {
+      color: var(--muted);
+      font-size: .95rem;
+      font-weight: 600;
+    }
+
+    .countdown {
+      margin-top: 25px;
+      color: var(--red);
+      font-size: clamp(1.55rem, 3.5vw, 2.1rem);
+      font-weight: 850;
+      letter-spacing: -.045em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .status {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: .9rem;
+      font-weight: 600;
+    }
+
+    .warning {
+      display: none;
+      margin-top: 18px;
+      padding: 12px 14px;
+      border: 1px solid #f3d5ad;
+      border-radius: 12px;
+      color: #743900;
+      background: var(--warning);
+      font-weight: 800;
+    }
+
+    .warning.visible { display: block; }
+    .warning small { display: block; margin-top: 3px; font-weight: 600; }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 4px;
+    }
+
+    th {
+      padding: 10px 12px;
+      color: var(--muted);
+      background: #faf7f7;
+      text-align: left;
+      font-size: .68rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+    }
+
+    th:first-child { border-radius: 9px 0 0 9px; }
+    th:last-child { border-radius: 0 9px 9px 0; }
+
+    td {
+      padding: 11px 12px;
+      border-bottom: 1px solid #f2eded;
+      color: var(--ink);
+      text-align: left;
+      font-size: .91rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    tbody tr:last-child td { border-bottom: 0; }
+
+    tbody tr.current {
+      color: #fff;
+      background: var(--red);
+      font-weight: 800;
+    }
+
+    tbody tr.current td {
+      border-color: transparent;
+      color: #fff;
+    }
+
+    tbody tr.current td:first-child { border-radius: 10px 0 0 10px; }
+    tbody tr.current td:last-child { border-radius: 0 10px 10px 0; }
+
+    .next-card {
+      margin-top: 18px;
+      padding: 20px 23px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px 18px;
+    }
+
+    .eyebrow {
+      color: var(--muted);
+      font-size: .7rem;
+      font-weight: 850;
+      letter-spacing: .13em;
+    }
+
+    .next-period {
+      margin: 0;
+      color: var(--red-dark);
+      font-size: 1.35rem;
+      font-weight: 800;
+    }
+
+    .next-start { color: var(--muted); font-size: .9rem; }
+    .calendar-note { width: 100%; color: var(--muted); font-size: .88rem; }
+
+    @media (max-width: 760px) {
+      .dashboard { grid-template-columns: 1fr; }
+      .countdown-card { min-height: auto; }
+      .countdown { margin-top: 17px; }
+    }
+
+    @media (max-width: 560px) {
+      header {
+        padding: 13px 14px;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .brand h1 { font-size: 1rem; }
+      .brand p { font-size: .78rem; }
+      .clock { padding: 8px 10px; font-size: .82rem; }
+
+      main {
+        width: calc(100% - 24px);
+        margin-top: 24px;
+      }
+
+      .page-intro {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .card { padding: 17px; }
+
+      .date-controls { gap: 7px; }
+      .date-controls label { flex-basis: 100%; }
+      .date-controls input { flex: 1; min-width: 145px; }
+
+      th, td { padding: 10px 8px; }
+      td { font-size: .83rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <button class="menu-button" id="menuButton" type="button"
+      aria-expanded="false" aria-controls="sidebar">☰ &nbsp; Days</button>
+    <div class="brand">
+      <h1>Red Bank Regional</h1>
+      <p>Bell Schedule</p>
+    </div>
+    <div class="clock" id="clock">--:--:--</div>
+  </header>
+
+  <div class="backdrop" id="backdrop"></div>
+
+  <aside class="sidebar" id="sidebar" aria-label="Choose a schedule day">
+    <div class="sidebar-top">
+      <h2>Choose a Day</h2>
+      <button class="close-button" id="closeButton" type="button"
+        aria-label="Close menu">×</button>
+    </div>
+    <button class="day-option" type="button" data-day="A" aria-pressed="false">A DAY</button>
+    <button class="day-option" type="button" data-day="B" aria-pressed="false">B DAY</button>
+    <button class="day-option" type="button" data-day="C" aria-pressed="false">C DAY</button>
+    <button class="day-option" type="button" data-day="D" aria-pressed="false">D DAY</button>
+  </aside>
+
+  <main>
+    <div class="page-intro">
+      <div>
+        <h2 id="pageTitle">Today’s Schedule</h2>
+        <div class="date-text" id="dateText"></div>
+      </div>
+      <div class="day-badge" id="dayBadge">NO SCHOOL DAY</div>
+    </div>
+
+    <div class="date-controls" aria-label="Choose a date">
+      <label for="datePicker">View date</label>
+      <button class="date-arrow" id="previousDate" type="button"
+        aria-label="Previous date" title="Previous date">‹</button>
+      <input type="date" id="datePicker">
+      <button class="date-arrow" id="nextDate" type="button"
+        aria-label="Next date" title="Next date">›</button>
+      <button class="today-button" id="todayButton" type="button">Today</button>
+    </div>
+
+    <section class="dashboard">
+      <article class="card countdown-card">
+        <div class="card-heading">
+          <h2>COUNTDOWN</h2>
+          <span id="countdownDayLabel"></span>
+        </div>
+        <div class="countdown-label" id="countdownLabel">CURRENT PERIOD</div>
+        <h3 class="current-period" id="currentPeriod">—</h3>
+        <div class="period-times" id="periodTimes"></div>
+        <div class="countdown" id="countdown"></div>
+        <div class="status" id="status" aria-live="polite"></div>
+        <div class="warning" id="warning" role="status">
+          ⚠️ 5 MINUTES LEFT
+          <small id="warningDetail"></small>
+        </div>
+      </article>
+
+      <section class="card">
+        <div class="card-heading">
+          <h2>PERIOD SCHEDULE</h2>
+          <span id="scheduleDayLabel"></span>
+        </div>
+        <div class="table-wrap" id="scheduleTable"></div>
+      </section>
+    </section>
+
+    <section class="card next-card">
+      <div class="eyebrow">WHAT’S NEXT</div>
+      <p class="next-period" id="nextPeriod">—</p>
+      <div class="next-start" id="nextStart"></div>
+      <div class="calendar-note" id="calendarNote"></div>
+    </section>
+  </main>
+
+  <script>
+    // Period order for each rotation day.
+    const dayPeriods = {
+      A: [1, 2, 3, "Mod 1", "Mod 2", 5, 6, 7],
+      B: [4, 1, 2, "Mod 1", "Mod 2", 8, 5, 6],
+      C: [3, 4, 1, "Mod 1", "Mod 2", 7, 8, 5],
+      D: [2, 3, 4, "Mod 1", "Mod 2", 6, 7, 8]
+    };
+
+    // Times are assigned by position in the daily schedule.
+    const bellTimes = {
+      full: [
+        ["07:40", "08:35"],
+        ["08:39", "09:34"],
+        ["09:38", "10:31"],
+        ["10:35", "11:05"],
+        ["11:05", "11:35"],
+        ["11:39", "12:32"],
+        ["12:36", "13:31"],
+        ["13:35", "14:30"]
+      ],
+      half: [
+        ["07:40", "08:16"],
+        ["08:20", "08:56"],
+        ["09:00", "09:36"],
+        ["09:40", "10:16"],
+        ["10:20", "10:56"],
+        ["11:00", "11:35"]
+      ]
+    };
+
+    // Dates and rotation letters from 26-27 Rotating Calendar Days.pdf.
+    const calendarEntries = {
+      "2026-10-07": { day: "D" },
+      "2026-10-08": { day: "A" },
+      "2026-10-09": { day: "B" },
+      "2026-10-12": { day: "C" },
+      "2026-10-13": { day: "D" },
+      "2026-10-14": { day: "A" },
+      "2026-10-15": { day: "B" },
+      "2026-10-16": { day: "C" },
+      "2026-10-19": { day: "D" },
+      "2026-10-20": { day: "A" },
+      "2026-10-21": { day: "B" },
+      "2026-10-22": { day: "C" },
+      "2026-10-23": { day: "D" },
+      "2026-10-26": { day: "A" },
+      "2026-10-27": { day: "B" },
+      "2026-10-28": { day: "C" },
+      "2026-10-29": { day: "D", type: "half", note: "Half Day — Staff PD" },
+      "2026-10-30": { day: "A" },
+
+      "2026-11-02": { day: "B" },
+      "2026-11-03": { day: "C" },
+      "2026-11-04": { day: "D", note: "End of MP 1" },
+      "2026-11-09": { day: "A" },
+      "2026-11-10": { day: "B" },
+      "2026-11-11": { day: "C" },
+      "2026-11-12": { day: "D" },
+      "2026-11-13": { day: "A" },
+      "2026-11-16": { day: "B" },
+      "2026-11-17": { day: "C" },
+      "2026-11-18": { day: "D" },
+      "2026-11-19": { day: "A" },
+      "2026-11-20": { day: "B" },
+      "2026-11-23": { day: "C" },
+      "2026-11-24": { day: "D" },
+      "2026-11-25": { day: "A", type: "half", note: "Half Day — All" },
+      "2026-11-30": { day: "B" },
+
+      "2026-12-01": { day: "C" },
+      "2026-12-02": { day: "D" },
+      "2026-12-03": { day: "A" },
+      "2026-12-04": { day: "B" },
+      "2026-12-07": { day: "C" },
+      "2026-12-08": { day: "D" },
+      "2026-12-09": { day: "A" },
+      "2026-12-10": { day: "B", type: "half", note: "Half Day — Staff PD" },
+      "2026-12-11": { day: "C" },
+      "2026-12-14": { day: "D" },
+      "2026-12-15": { day: "A" },
+      "2026-12-16": { day: "B" },
+      "2026-12-17": { day: "C" },
+      "2026-12-18": { day: "D" },
+      "2026-12-21": { day: "A" },
+      "2026-12-22": { day: "B" },
+      "2026-12-23": { day: "C", type: "half", note: "Half Day — All" },
+
+      "2027-01-04": { day: "D" },
+      "2027-01-05": { day: "A" },
+      "2027-01-06": { day: "B" },
+      "2027-01-07": { day: "C" },
+      "2027-01-08": { day: "D" },
+      "2027-01-11": { day: "A" },
+      "2027-01-12": { day: "B" },
+      "2027-01-13": { day: "C" },
+      "2027-01-14": { day: "D" },
+      "2027-01-15": { day: "A" },
+      "2027-01-19": { day: "B" },
+      "2027-01-20": { special: "Review", note: "Review Blocks 1, 2, 5, 6" },
+      "2027-01-21": { special: "Midterm", note: "Midterms Blocks 1 & 2" },
+      "2027-01-22": { special: "Midterm", note: "Midterms Blocks 5 & 6" },
+      "2027-01-25": { special: "Review", note: "Review Blocks 3, 4, 7, 8" },
+      "2027-01-26": { special: "Midterm", note: "Midterms Blocks 3 & 4" },
+      "2027-01-27": { special: "Midterm", note: "Midterms Blocks 7 & 8 · End of MP 2" },
+      "2027-01-28": { day: "C" },
+      "2027-01-29": { day: "D" },
+
+      "2027-02-01": { day: "A" },
+      "2027-02-02": { day: "B" },
+      "2027-02-03": { day: "C" },
+      "2027-02-04": { day: "D" },
+      "2027-02-05": { day: "A" },
+      "2027-02-08": { day: "B" },
+      "2027-02-09": { day: "C" },
+      "2027-02-10": { day: "D" },
+      "2027-02-11": { day: "A" },
+      "2027-02-12": { day: "B", type: "half", note: "Half Day — All" },
+      "2027-02-16": { day: "C" },
+      "2027-02-17": { day: "D" },
+      "2027-02-18": { day: "A" },
+      "2027-02-19": { day: "B" },
+      "2027-02-22": { day: "C" },
+      "2027-02-23": { day: "D" },
+      "2027-02-24": { day: "A" },
+      "2027-02-25": { day: "B" },
+      "2027-02-26": { day: "C" },
+
+      "2027-03-01": { day: "D" },
+      "2027-03-02": { day: "A" },
+      "2027-03-03": { day: "B" },
+      "2027-03-04": { day: "C" },
+      "2027-03-05": { day: "D", type: "half", note: "Half Day — Staff PD" },
+      "2027-03-08": { day: "A" },
+      "2027-03-09": { day: "B" },
+      "2027-03-10": { day: "C" },
+      "2027-03-11": { day: "D" },
+      "2027-03-12": { day: "A" },
+      "2027-03-15": { day: "B" },
+      "2027-03-16": { day: "C" },
+      "2027-03-17": { day: "D" },
+      "2027-03-18": { day: "A" },
+      "2027-03-19": { day: "B" },
+      "2027-03-22": { day: "C" },
+      "2027-03-23": { day: "D" },
+      "2027-03-24": { day: "A" },
+      "2027-03-25": { day: "B", note: "End of MP 3" },
+
+      "2027-04-05": { day: "C" },
+      "2027-04-06": { day: "D" },
+      "2027-04-07": { day: "A" },
+      "2027-04-08": { day: "B" },
+      "2027-04-09": { day: "C" },
+      "2027-04-12": { day: "D" },
+      "2027-04-13": { day: "A" },
+      "2027-04-14": { day: "B", type: "half", note: "Half Day — Staff PD" },
+      "2027-04-15": { day: "C" },
+      "2027-04-16": { day: "D" },
+      "2027-04-19": { day: "A" },
+      "2027-04-20": { day: "B" },
+      "2027-04-22": { day: "C" },
+      "2027-04-23": { day: "D" },
+      "2027-04-26": { day: "A" },
+      "2027-04-27": { day: "B" },
+      "2027-04-28": { day: "C" },
+      "2027-04-29": { day: "D" },
+      "2027-04-30": { day: "A" },
+
+      "2027-05-03": { day: "B" },
+      "2027-05-04": { day: "C" },
+      "2027-05-05": { day: "D" },
+      "2027-05-06": { day: "A" },
+      "2027-05-07": { day: "B" },
+      "2027-05-10": { day: "C" },
+      "2027-05-11": { day: "D" },
+      "2027-05-12": { day: "A" },
+      "2027-05-13": { day: "B" },
+      "2027-05-14": { day: "C" },
+      "2027-05-17": { day: "D" },
+      "2027-05-18": { day: "A" },
+      "2027-05-19": { day: "B" },
+      "2027-05-20": { day: "C" },
+      "2027-05-21": { day: "D" },
+      "2027-05-24": { day: "A" },
+      "2027-05-25": { day: "B" },
+      "2027-05-26": { day: "C" },
+      "2027-05-27": { day: "D" },
+      "2027-05-28": { day: "A", type: "half", note: "Half Day — All" },
+
+      "2027-06-01": { day: "B" },
+      "2027-06-02": { day: "C" },
+      "2027-06-03": { day: "D" },
+      "2027-06-04": { day: "A" },
+      "2027-06-07": { day: "B" },
+      "2027-06-08": { special: "Review", note: "Review Blocks 3, 4, 7, 8" },
+      "2027-06-09": { special: "Midterms", note: "Midterms Blocks 3 & 4" },
+      "2027-06-10": { special: "Midterms", note: "Midterms Blocks 7 & 8" },
+      "2027-06-11": { special: "Review", note: "Review Blocks 1, 2, 5, 6" },
+      "2027-06-14": { special: "Midterms", note: "Midterms Blocks 1 & 2" },
+      "2027-06-15": { special: "Midterms", note: "Midterms Blocks 5 & 6 · End of MP 4" },
+      "2027-06-16": { special: "Graduation", note: "Graduation" }
+    };
+
+    const $ = id => document.getElementById(id);
+    let previewDate = null;
+    let manualDay = null;
+    const notifiedWarnings = new Set();
+
+    function dateKey(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function dateFromInput(value) {
+      if (!value) return new Date();
+      const [year, month, day] = value.split("-").map(Number);
+      return new Date(year, month - 1, day);
+    }
+
+    function formatDate(date) {
+      return new Intl.DateTimeFormat(undefined, {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric"
+      }).format(date);
+    }
+
+    function formatTime(date) {
+      return new Intl.DateTimeFormat(undefined, {
+        hour: "numeric",
+        minute: "2-digit"
+      }).format(date);
+    }
+
+    function atTime(date, time) {
+      const [hours, minutes] = time.split(":").map(Number);
+      const result = new Date(date);
+      result.setHours(hours, minutes, 0, 0);
+      return result;
+    }
+
+    function remainingText(milliseconds) {
+      const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${minutes}m ${String(seconds).padStart(2, "0")}s remaining`;
+    }
+
+    function getSchedule(entry) {
+      if (!entry) return null;
+      if (entry.special) return [];
+
+      const periods = dayPeriods[entry.day];
+      if (!periods) return [];
+
+      const isHalf = entry.type === "half";
+      const periodsForDay = isHalf
+        ? periods.filter(period => period !== "Mod 1" && period !== "Mod 2")
+        : periods;
+
+      const times = isHalf ? bellTimes.half : bellTimes.full;
+
+      return periodsForDay.map((period, index) => ({
+        period: typeof period === "number" ? `Period ${period}` : period,
+        start: times[index]?.[0] || null,
+        end: times[index]?.[1] || null
+      }));
+    }
+
+    function renderSchedule(schedule, currentPeriod, date, label) {
+      $("scheduleDayLabel").textContent = label || "";
+
+      if (!schedule || !schedule.length) {
+        $("scheduleTable").innerHTML =
+          '<div style="padding:14px 0;color:#786f72">No class periods are listed for this date.</div>';
+        return;
+      }
+
+      $("scheduleTable").innerHTML = `
+        <table>
+          <thead>
+            <tr><th>Period</th><th>Start</th><th>End</th></tr>
+          </thead>
+          <tbody>
+            ${schedule.map(item => `
+              <tr class="${item.period === currentPeriod ? "current" : ""}">
+                <td>${item.period}</td>
+                <td>${item.start ? formatTime(atTime(date, item.start)) : "Time unavailable"}</td>
+                <td>${item.end ? formatTime(atTime(date, item.end)) : "Time unavailable"}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>`;
+    }
+
+    function updateCountdown(schedule, comparisonTime, isToday, entry) {
+      $("warning").classList.remove("visible");
+
+      if (!entry) {
+        $("countdownLabel").textContent = "CURRENT PERIOD";
+        $("currentPeriod").textContent = "No school schedule";
+        $("periodTimes").textContent = "";
+        $("countdown").textContent = "";
+        $("status").textContent = "No school day is listed for this date.";
+        $("nextPeriod").textContent = "No schedule";
+        $("nextStart").textContent = "";
+        return null;
+      }
+
+      if (entry.special) {
+        $("countdownLabel").textContent = "SPECIAL DAY";
+        $("currentPeriod").textContent = entry.special;
+        $("periodTimes").textContent = "";
+        $("countdown").textContent = "";
+        $("status").textContent = entry.note || "";
+        $("nextPeriod").textContent = entry.special;
+        $("nextStart").textContent = "";
+        return null;
+      }
+
+      const timedPeriods = (schedule || []).map(item => ({
+        ...item,
+        startAt: atTime(comparisonTime, item.start),
+        endAt: atTime(comparisonTime, item.end)
+      }));
+
+      const current = timedPeriods.find(item =>
+        comparisonTime >= item.startAt && comparisonTime < item.endAt
+      );
+
+      const next = timedPeriods.find(item => comparisonTime < item.startAt);
+
+      if (current) {
+        const timeLeft = current.endAt - comparisonTime;
+
+        $("countdownLabel").textContent = isToday
+          ? "CURRENT PERIOD"
+          : "PERIOD AT THIS TIME";
+        $("currentPeriod").textContent = current.period;
+        $("periodTimes").textContent =
+          `${formatTime(current.startAt)} – ${formatTime(current.endAt)}`;
+        $("countdown").textContent = remainingText(timeLeft);
+        $("status").textContent = isToday
+          ? "Period is in session"
+          : "This is the period at this time of day.";
+
+        if (isToday && timeLeft <= 5 * 60 * 1000) {
+          $("warning").classList.add("visible");
+          $("warningDetail").textContent =
+            `${current.period} ends at ${formatTime(current.endAt)}`;
+
+          const key = `${dateKey(comparisonTime)}-${current.period}`;
+          if (!notifiedWarnings.has(key)) {
+            notifiedWarnings.add(key);
+            if ("Notification" in window && Notification.permission === "granted") {
+              new Notification("5 minutes left", {
+                body: `${current.period} ends at ${formatTime(current.endAt)}.`
+              });
+            }
+          }
+        }
+
+        $("nextPeriod").textContent = next ? next.period : "No more periods";
+        $("nextStart").textContent = next
+          ? `Starts at ${formatTime(next.startAt)}`
+          : "No later period.";
+        return current.period;
+      }
+
+      $("countdownLabel").textContent = "CURRENT PERIOD";
+      $("currentPeriod").textContent = "No period right now";
+      $("periodTimes").textContent = "";
+      $("countdown").textContent = "";
+      $("status").textContent = "You are between periods or outside the listed school day.";
+
+      if (next) {
+        $("nextPeriod").textContent = next.period;
+        $("nextStart").textContent = `Starts at ${formatTime(next.startAt)}`;
+        if (isToday) {
+          $("countdown").textContent =
+            `Next period in ${remainingText(next.startAt - comparisonTime)}`;
+        }
+      } else {
+        $("nextPeriod").textContent = "No more periods";
+        $("nextStart").textContent = "The school day has ended.";
+      }
+
+      return null;
+    }
+
+    function update() {
+      const now = new Date();
+      const todayKey = dateKey(now);
+
+      $("clock").textContent = new Intl.DateTimeFormat(undefined, {
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit"
+      }).format(now);
+
+      if (!previewDate) {
+        previewDate = todayKey;
+        $("datePicker").value = todayKey;
+      }
+
+      const viewingDate = dateFromInput(previewDate);
+      const isToday = previewDate === todayKey;
+      const entry = manualDay
+        ? { day: manualDay }
+        : (calendarEntries[previewDate] || null);
+
+      const schedule = getSchedule(entry);
+      const comparisonTime = new Date(viewingDate);
+      comparisonTime.setHours(
+        now.getHours(),
+        now.getMinutes(),
+        now.getSeconds(),
+        now.getMilliseconds()
+      );
+
+      $("dateText").textContent = formatDate(viewingDate);
+      $("pageTitle").textContent = isToday ? "Today’s Schedule" : "Schedule Preview";
+
+      $("dayBadge").textContent = entry
+        ? `${entry.day || entry.special}${manualDay ? " · MANUAL" : isToday ? "" : " · PREVIEW"}`
+        : "NO SCHOOL DAY";
+
+      $("calendarNote").textContent = entry?.note || "";
+      $("countdownDayLabel").textContent = entry?.day || entry?.special || "";
+
+      const currentPeriod = updateCountdown(schedule, comparisonTime, isToday, entry);
+
+      const scheduleLabel = entry
+        ? `${entry.day || entry.special}${entry.type === "half" ? " · HALF DAY" : ""}${manualDay ? " · MANUAL PREVIEW" : ""}`
+        : "";
+
+      renderSchedule(schedule, currentPeriod, viewingDate, scheduleLabel);
+    }
+
+    function changeDate(amount) {
+      const date = dateFromInput(previewDate || dateKey(new Date()));
+      date.setDate(date.getDate() + amount);
+      previewDate = dateKey(date);
+      manualDay = null;
+      $("datePicker").value = previewDate;
+
+      document.querySelectorAll(".day-option").forEach(button =>
+        button.setAttribute("aria-pressed", "false")
+      );
+
+      update();
+    }
+
+    function openMenu() {
+      $("sidebar").classList.add("open");
+      $("backdrop").classList.add("visible");
+      $("menuButton").setAttribute("aria-expanded", "true");
+    }
+
+    function closeMenu() {
+      $("sidebar").classList.remove("open");
+      $("backdrop").classList.remove("visible");
+      $("menuButton").setAttribute("aria-expanded", "false");
+    }
+
+    $("menuButton").addEventListener("click", openMenu);
+    $("closeButton").addEventListener("click", closeMenu);
+    $("backdrop").addEventListener("click", closeMenu);
+
+    $("previousDate").addEventListener("click", () => changeDate(-1));
+    $("nextDate").addEventListener("click", () => changeDate(1));
+
+    $("datePicker").addEventListener("change", event => {
+      if (!event.target.value) return;
+      previewDate = event.target.value;
+      manualDay = null;
+
+      document.querySelectorAll(".day-option").forEach(button =>
+        button.setAttribute("aria-pressed", "false")
+      );
+
+      update();
+    });
+
+    $("todayButton").addEventListener("click", () => {
+      previewDate = dateKey(new Date());
+      manualDay = null;
+      $("datePicker").value = previewDate;
+
+      document.querySelectorAll(".day-option").forEach(button =>
+        button.setAttribute("aria-pressed", "false")
+      );
+
+      update();
+    });
+
+    document.querySelectorAll(".day-option").forEach(button => {
+      button.addEventListener("click", () => {
+        manualDay = button.dataset.day;
+
+        document.querySelectorAll(".day-option").forEach(option => {
+          option.setAttribute(
+            "aria-pressed",
+            String(option.dataset.day === manualDay)
+          );
+        });
+
+        update();
+        closeMenu();
+      });
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") closeMenu();
+      if (event.key === "ArrowLeft") changeDate(-1);
+      if (event.key === "ArrowRight") changeDate(1);
+    });
+
+    update();
+    setInterval(update, 1000);
+  </script>
+</body>
+</html>
